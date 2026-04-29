@@ -74,47 +74,82 @@ core type
 
 ## راه اندازی در مک (macOS)
 
-۱. ابتدا آخرین ورژن برنامه v2rayN مخصوص مک را از
-https://github.com/2dust/v2rayN/releases
-دانلود کنید (برای مک های با پردازنده Apple Silicon فایل v2rayN-macos-arm64.zip و برای پردازنده های Intel فایل v2rayN-macos-64.zip را انتخاب کنید) و اکسترکت کنید
+### ۱. دانلود v2rayN
 
-۲. حال نیاز به یک سرتیفیکیت شخصی دارید. در مک ابزار openssl به صورت پیشفرض نصب است، ترمینال (Terminal) را باز کنید و به فولدر bin برنامه v2rayN بروید سپس دستور زیر را اجرا کنید:
+از صفحه ریلیز
+https://github.com/2dust/v2rayN/releases
+آخرین نسخه فایل **zip** را دانلود کنید (نه فایل dmg، چون فایل dmg فقط برنامه v2rayN را نصب میکند ولی ما به فولدر bin شامل xray هم نیاز داریم):
+
+- برای مک‌های Apple Silicon (M1/M2/M3/M4): `v2rayN-macos-arm64.zip`
+- برای مک‌های با پردازنده Intel: `v2rayN-macos-64.zip`
+
+سپس فایل را اکسترکت کنید.
+
+### ۲. ساخت سرتیفیکیت شخصی
+
+ابزار openssl به صورت پیشفرض روی مک نصب است. ترمینال (Terminal) را باز کنید و به فولدر `bin/xray` داخل پوشه اکسترکت‌شده v2rayN بروید و سپس دستور openssl را اجرا کنید:
 
 ```bash
-cd /path/to/v2rayN-macos-*/bin
+cd /path/to/v2rayN-macos-arm64/bin/xray
 openssl req -x509 -newkey rsa:2048 -keyout mycert.key -out mycert.crt -sha256 -days 3650 -nodes -subj "/CN=MITM-DomainFronting"
 ```
 
-با این کار دو فایل mycert.crt و mycert.key در همان فولدر ایجاد میشود
+با این کار دو فایل `mycert.crt` و `mycert.key` در همان فولدر ایجاد میشود.
 
 **هشدار: حتما از سرتیفیکیت شخصی خود استفاده کنید و به هیچ عنوان از سرتیفیکیت (crt) دیگران استفاده نکنید و همچنین فایل پرایویت‌کی (key) خود را به هیچ شخصی ندهید**
 
-۳. حال باید سرتیفیکیت (crt) ایجاد شده را به عنوان trusted root certificate به سیستم عامل معرفی کنید
+### ۳. اضافه کردن سرتیفیکیت به سیستم به عنوان Trusted Root
 
-برای این کار روی فایل mycert.crt دابل کلیک کنید تا برنامه Keychain Access باز شود و سرتیفیکیت را در keychain با نام "System" (یا در صورت نیاز "login") اضافه کنید (نیاز به وارد کردن رمز سیستم دارد)
+برای اینکه سیستم عامل و مرورگرها به این سرتیفیکیت اعتماد کنند مراحل زیر را انجام دهید:
 
-سپس در همان برنامه Keychain Access روی سرتیفیکیت ایجاد شده دابل کلیک کنید و قسمت Trust را باز کنید و گزینه
-When using this certificate
-را روی Always Trust قرار دهید و پنجره را ببندید (مجددا نیاز به وارد کردن رمز سیستم دارد)
+  1. روی فایل `mycert.crt` دابل کلیک کنید تا برنامه **Keychain Access** باز شود
+  2. سرتیفیکیت را در keychain با نام **System** اضافه کنید (نیاز به وارد کردن رمز سیستم دارد)
+  3. در برنامه Keychain Access روی سرتیفیکیت `MITM-DomainFronting` که اضافه شده دابل کلیک کنید
+  4. قسمت **Trust** را باز کنید و مقدار `When using this certificate` را روی **Always Trust** قرار دهید
+  5. پنجره را ببندید (مجددا نیاز به وارد کردن رمز سیستم دارد)
 
-۴. نرم افزار v2rayN را اجرا کنید و از قسمت configuration بر روی
-add a custom configuration
-کلیک کنید حال یک نام دلخواه انتخاب کنید و فایل کانفیگ
-MITM-DomainFronting.json
-را وارد کنید
-core type
-را بر روی xray و socks port را حتما خالی بزارید
+### ۴. کپی کردن کانفیگ و اجرای xray از طریق ترمینال
 
-۵. کانفیگ را انتخاب کرده و set system proxy را انتخاب کنید
-کار تمام است اکنون میتوانید در مرورگرهای Safari و Chrome (و مرورگرهای دیگری که از certificate store سیستم استفاده میکنند) از این متد استفاده کنید
+فایل کانفیگ `MITM-DomainFronting.json` را در همان فولدر `bin/xray` که سرتیفیکیت‌ها را ساختید قرار دهید (تا مسیر `mycert.crt` و `mycert.key` به درستی پیدا شوند، چون در کانفیگ به صورت relative تعریف شده‌اند).
 
-در صورتی که از مرورگر فایرفاکس استفاده میکنید باید سرتیفیکیت را به طور جداگانه در خود فایرفاکس وارد کنید چون فایرفاکس از certificate store جداگانه‌ای استفاده میکند:
+سپس در ترمینال در همان فولدر دستور زیر را برای اجرای xray اجرا کنید:
 
-Firefox -> Settings -> Privacy & Security -> Certificates -> View Certificates -> Authorities -> Import -> Select mycert.crt -> Trust this CA to identify websites
+```bash
+cd /path/to/v2rayN-macos-arm64/bin/xray
+./xray run -c MITM-DomainFronting.json
+```
 
-نکته: در صورتی که هنگام اولین اجرای v2rayN با پیغام امنیتی macOS مواجه شدید (به دلیل اینکه برنامه از Apple Notarization عبور نکرده) به مسیر
-System Settings -> Privacy & Security
-بروید و در پایین صفحه گزینه Open Anyway را انتخاب کنید
+#### رفع پیغام امنیتی macOS
+
+هنگام اجرای اولیه ممکن است مک پیغام امنیتی نمایش دهد مبنی بر اینکه xray از یک developer شناخته‌شده نیست (Apple Notarization ندارد). برای رفع این مشکل:
+
+  1. به مسیر **System Settings → Privacy & Security** بروید
+  2. در پایین صفحه پیغامی مشابه `"xray" was blocked from use because it is not from an identified developer` نمایش داده میشود
+  3. روی **Open Anyway** کلیک کنید
+  4. مجددا در ترمینال دستور `./xray run -c MITM-DomainFronting.json` را اجرا کنید و در دیالوگی که ظاهر میشود **Open** را بزنید
+
+اگر xray با موفقیت بالا بیاید بدون پیغام خطا در ترمینال منتظر اتصال میماند. با Ctrl+C میتوانید آن را متوقف کنید.
+
+### ۵. تنظیم مرورگر
+
+xray یک پراکسی ترکیبی (HTTP/SOCKS) را روی پورت `10808` بالا می‌آورد. باید مرورگر را طوری تنظیم کنید که از این پراکسی استفاده کند.
+
+ساده‌ترین راه استفاده از System Proxy مک است:
+
+  1. به **System Settings → Network** بروید و کانکشن فعال خود (Wi-Fi یا Ethernet) را انتخاب کنید
+  2. روی **Details... → Proxies** کلیک کنید
+  3. هم **Web Proxy (HTTP)** و هم **Secure Web Proxy (HTTPS)** را روی `127.0.0.1` پورت `10808` تنظیم کنید
+  4. **OK** و سپس **Apply** را بزنید
+
+اکنون میتوانید در مرورگرهای Safari و Chrome (و مرورگرهای دیگری که از پراکسی و سرتیفیکیت سیستم استفاده میکنند) از این متد استفاده کنید.
+
+#### تنظیمات اضافه برای فایرفاکس
+
+فایرفاکس از certificate store جداگانه‌ای استفاده میکند پس باید سرتیفیکیت را جداگانه به آن معرفی کنید:
+
+`Firefox → Settings → Privacy & Security → Certificates → View Certificates → Authorities → Import → Select mycert.crt → Trust this CA to identify websites`
+
+همچنین برای پراکسی در فایرفاکس میتوانید از تنظیمات system proxy استفاده کنید یا در `Settings → Network Settings → Manual proxy configuration` آدرس `127.0.0.1` و پورت `10808` را وارد کنید.
 
 ## راه اندازی در اندروید
 
